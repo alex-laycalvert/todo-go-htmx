@@ -18,10 +18,15 @@ const (
 )
 
 type PageData struct {
-	Todos []*todos.Todo
+	Todos []todos.Todo
 }
 
 func main() {
+	log.Println("Initializing Database")
+	err := todos.Init()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v\n", err.Error())
+	}
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
 	http.HandleFunc("/api/todo", apiHandler)
 	http.HandleFunc("/api/todo/", apiHandler)
@@ -31,9 +36,13 @@ func main() {
 }
 
 func indexHandler(res http.ResponseWriter, req *http.Request) {
-	if err := renderPage(res, "index", PageData{Todos: todos.Todos()}); err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		log.Printf("Error: %v\n", err)
+	todos, err := todos.Todos()
+	if err != nil {
+		handleError(res, err)
+		return
+	}
+	if err := renderPage(res, "index", PageData{Todos: todos}); err != nil {
+		handleError(res, err)
 	}
 }
 
@@ -42,8 +51,7 @@ func apiHandler(res http.ResponseWriter, req *http.Request) {
 	case "POST":
 		data, err := parseBody(req)
 		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-			log.Printf("Error: %v\n", err)
+			handleError(res, err)
 			return
 		}
 		todos.Add(data.Get("description"))
@@ -58,10 +66,13 @@ func apiHandler(res http.ResponseWriter, req *http.Request) {
 		log.Printf("Error: %v method not supported", req.Method)
 		return
 	}
-	if err := renderComponent(res, "todos", PageData{Todos: todos.Todos()}); err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		log.Printf("Error: %v\n", err)
+	todos, err := todos.Todos()
+	if err != nil {
+		handleError(res, err)
 		return
+	}
+	if err := renderComponent(res, "todos", PageData{Todos: todos}); err != nil {
+		handleError(res, err)
 	}
 }
 
@@ -96,4 +107,12 @@ func renderPage(res http.ResponseWriter, page string, data interface{}) error {
 		}
 	}
 	return tmpl.ExecuteTemplate(res, "base", data)
+}
+
+func handleError(res http.ResponseWriter, err error) {
+	if err == nil {
+		return
+	}
+	http.Error(res, err.Error(), http.StatusInternalServerError)
+	log.Printf("Error: %v\n", err)
 }
