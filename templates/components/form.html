@@ -5,7 +5,13 @@
   hx-swap="outerHTML"
   hx-on::after-request="this.reset()"
 >
-  <label for="description">Description</label>
-  <input type="text" name="description" placeholder="todo..." />
-  <button type="submit">Add TODO</button>
+  <div class="input">
+    <input
+      type="text"
+      id="description"
+      name="description"
+      placeholder="todo..."
+    />
+    <button type="submit">+</button>
+  </div>
 </form>

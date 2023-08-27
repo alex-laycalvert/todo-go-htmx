@@ -1,14 +1,16 @@
-<ul id="todos" class="todos">
+<div id="todos" class="todos">
+  <div>{{len .Todos}} Items</div>
   {{range $todo := .Todos}}
-  <li class="todo">
-    <h2>{{$todo.Description}}</h2>
+  <div class="todo">
+    <div class="header">{{$todo.Description}}</div>
     <button
+      class="remove-button"
       hx-delete="/api/todo/{{$todo.Id}}"
       hx-target="#todos"
       hx-swap="outerHTML"
     >
-      Remove
+		x
     </button>
-  </li>
+  </div>
   {{end}}
-</ul>
+</div>
