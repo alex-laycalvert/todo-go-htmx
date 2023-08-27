@@ -1,0 +1,11 @@
+<form
+  class="todos-form"
+  hx-post="/api/todo"
+  hx-target="#todos"
+  hx-swap="outerHTML"
+  hx-on::after-request="this.reset()"
+>
+  <label for="description">Description</label>
+  <input type="text" name="description" placeholder="todo..." />
+  <button type="submit">Add TODO</button>
+</form>

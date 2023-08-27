@@ -1,0 +1,14 @@
+<ul id="todos" class="todos">
+  {{range $todo := .Todos}}
+  <li class="todo">
+    <h2>{{$todo.Description}}</h2>
+    <button
+      hx-delete="/api/todo/{{$todo.Id}}"
+      hx-target="#todos"
+      hx-swap="outerHTML"
+    >
+      Remove
+    </button>
+  </li>
+  {{end}}
+</ul>
