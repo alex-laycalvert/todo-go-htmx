@@ -4,12 +4,12 @@ WORKDIR /app
 
 COPY . .
 RUN CGO_ENABLED=1 go build
-RUN mkdir db
+RUN mkdir -p db
 
 EXPOSE 8080
 
 ENV PORT 8080
 
-VOLUME db
+VOLUME db db
 
 CMD ["./todo"]
