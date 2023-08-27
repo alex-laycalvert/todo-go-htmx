@@ -38,11 +38,11 @@ func main() {
 func indexHandler(res http.ResponseWriter, req *http.Request) {
 	todos, err := todos.Todos()
 	if err != nil {
-		handleError(res, err)
+		handleError(res, req, http.StatusInternalServerError, err)
 		return
 	}
 	if err := renderPage(res, "index", PageData{Todos: todos}); err != nil {
-		handleError(res, err)
+		handleError(res, req, http.StatusInternalServerError, err)
 	}
 }
 
@@ -51,7 +51,7 @@ func apiHandler(res http.ResponseWriter, req *http.Request) {
 	case "POST":
 		data, err := parseBody(req)
 		if err != nil {
-			handleError(res, err)
+			handleError(res, req, http.StatusBadRequest, err)
 			return
 		}
 		todos.Add(data.Get("description"))
@@ -68,11 +68,11 @@ func apiHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	todos, err := todos.Todos()
 	if err != nil {
-		handleError(res, err)
+		handleError(res, req, http.StatusInternalServerError, err)
 		return
 	}
 	if err := renderComponent(res, "todos", PageData{Todos: todos}); err != nil {
-		handleError(res, err)
+		handleError(res, req, http.StatusInternalServerError, err)
 	}
 }
 
@@ -109,10 +109,10 @@ func renderPage(res http.ResponseWriter, page string, data interface{}) error {
 	return tmpl.ExecuteTemplate(res, "base", data)
 }
 
-func handleError(res http.ResponseWriter, err error) {
+func handleError(res http.ResponseWriter, req *http.Request, code int, err error) {
 	if err == nil {
 		return
 	}
-	http.Error(res, err.Error(), http.StatusInternalServerError)
-	log.Printf("Error: %v\n", err)
+	http.Error(res, err.Error(), code)
+	log.Printf("%v %v %v\n", code, req.URL, err)
 }
