@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/alex-laycalvert/todo/todo"
+	"github.com/alex-laycalvert/todo/todos"
 )
 
 const (
@@ -18,22 +18,20 @@ const (
 )
 
 type PageData struct {
-	Todos []*todo.Todo
+	Todos []*todos.Todo
 }
 
-var todos []*todo.Todo
-
 func main() {
-	todos = []*todo.Todo{}
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
 	http.HandleFunc("/api/todo", apiHandler)
 	http.HandleFunc("/api/todo/", apiHandler)
 	http.HandleFunc("/", indexHandler)
+	log.Println("Starting server on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func indexHandler(res http.ResponseWriter, req *http.Request) {
-	if err := renderPage(res, "index", PageData{Todos: todos}); err != nil {
+	if err := renderPage(res, "index", PageData{Todos: todos.Todos()}); err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		log.Printf("Error: %v\n", err)
 	}
@@ -48,35 +46,19 @@ func apiHandler(res http.ResponseWriter, req *http.Request) {
 			log.Printf("Error: %v\n", err)
 			return
 		}
-		description := data.Get("description")
-		if len(description) > 0 {
-			todos = append(todos, todo.New(description))
-		}
+		todos.Add(data.Get("description"))
 	case "DELETE":
 		params := strings.Split(req.URL.Path, "/")
 		if len(params) == 0 {
 			break
 		}
-		id := params[len(params)-1]
-		index := -1
-		for i, t := range todos {
-			if t.Id.String() == id {
-				index = i
-				break
-			}
-		}
-		if index < 0 {
-			break
-		}
-		copy(todos[index:], todos[index+1:])
-		todos[len(todos)-1] = nil
-		todos = todos[:len(todos)-1]
+		todos.Remove(params[len(params)-1])
 	default:
 		http.Error(res, "method not supported", http.StatusMethodNotAllowed)
 		log.Printf("Error: %v method not supported", req.Method)
 		return
 	}
-	if err := renderComponent(res, "todos", PageData{Todos: todos}); err != nil {
+	if err := renderComponent(res, "todos", PageData{Todos: todos.Todos()}); err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		log.Printf("Error: %v\n", err)
 		return
