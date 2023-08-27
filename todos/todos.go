@@ -8,7 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const DATABASE_URL = "db.sqlite"
+const DATABASE_URL = "db/db.sqlite"
 
 type Todo struct {
 	Id          uuid.UUID
